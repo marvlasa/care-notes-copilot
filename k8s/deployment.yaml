@@ -1,0 +1,202 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: carenotes
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: carenotes-secrets
+  namespace: carenotes
+type: Opaque
+stringData:
+  DATABASE_URL: "postgresql://postgres:postgres@postgres:5432/carenotes"
+  REDIS_URL: "redis://redis:6379"
+  OPENAI_API_KEY: "your-key-here"
+  JWT_SECRET: "change-this-in-production-min-32-chars"
+  LANGFUSE_PUBLIC_KEY: ""
+  LANGFUSE_SECRET_KEY: ""
+  SENTRY_DSN: ""
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: carenotes-config
+  namespace: carenotes
+data:
+  RATE_LIMIT_MAX_REQUESTS: "100"
+  RATE_LIMIT_WINDOW_MS: "900000"
+  COST_ALERT_THRESHOLD_USD: "100"
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: carenotes-app
+  namespace: carenotes
+  labels:
+    app: carenotes
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: carenotes
+  template:
+    metadata:
+      labels:
+        app: carenotes
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "3000"
+        prometheus.io/path: "/api/metrics"
+    spec:
+      containers:
+      - name: app
+        image: carenotes:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 3000
+          name: http
+        envFrom:
+        - secretRef:
+            name: carenotes-secrets
+        - configMapRef:
+            name: carenotes-config
+        resources:
+          requests:
+            cpu: "500m"
+            memory: "512Mi"
+          limits:
+            cpu: "1000m"
+            memory: "1Gi"
+        livenessProbe:
+          httpGet:
+            path: /api/health
+            port: 3000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /api/health
+            port: 3000
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          successThreshold: 1
+          failureThreshold: 3
+        lifecycle:
+          preStop:
+            exec:
+              command: ["/bin/sh", "-c", "sleep 15"]
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: carenotes-service
+  namespace: carenotes
+  labels:
+    app: carenotes
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 3000
+    protocol: TCP
+    name: http
+  selector:
+    app: carenotes
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: carenotes-ingress
+  namespace: carenotes
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/rate-limit: "100"
+spec:
+  tls:
+  - hosts:
+    - carenotes.example.com
+    secretName: carenotes-tls
+  rules:
+  - host: carenotes.example.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: carenotes-service
+            port:
+              number: 80
+
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: carenotes-hpa
+  namespace: carenotes
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: carenotes-app
+  minReplicas: 3
+  maxReplicas: 20
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 50
+        periodSeconds: 60
+    scaleUp:
+      stabilizationWindowSeconds: 0
+      policies:
+      - type: Percent
+        value: 100
+        periodSeconds: 30
+      - type: Pods
+        value: 2
+        periodSeconds: 30
+      selectPolicy: Max
+
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: carenotes-pdb
+  namespace: carenotes
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: carenotes
+

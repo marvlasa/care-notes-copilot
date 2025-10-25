@@ -39,3 +39,16 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# pulumi
+infra/Pulumi.*.yaml
+infra/.pulumi
+infra/node_modules
+
+# logs
+logs
+*.log
+
+# docker volumes
+postgres_data
+redis_data
