@@ -1,5 +1,7 @@
 "use client";
 
+import { Icon, ARROW } from "./icons";
+
 interface AskFormProps {
   value: string;
   loading: boolean;
@@ -18,7 +20,7 @@ export function AskForm({ value, loading, onChange, onSubmit }: AskFormProps) {
   return (
     <div className="ask-card">
       <div className="ask-card-header">
-        <p className="ask-card-title">Clinical Question</p>
+        <p className="ask-card-title eyebrow">Clinical Question</p>
       </div>
 
       <textarea
@@ -50,9 +52,7 @@ export function AskForm({ value, loading, onChange, onSubmit }: AskFormProps) {
             </>
           ) : (
             <>
-              <svg viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="M5 12h14M12 5l7 7-7 7" />
-              </svg>
+              <Icon>{ARROW}</Icon>
               Ask Copilot
             </>
           )}

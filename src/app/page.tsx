@@ -3,12 +3,52 @@
 import { useState } from "react";
 import { AskForm } from "./components/AskForm";
 import { AnswerCard } from "./components/AnswerCard";
+import { Icon, SPARK, ARROW } from "./components/icons";
 
 const EXAMPLE_QUESTIONS = [
   "What medications are prescribed for hypertension?",
   "What is the patient's most recent A1C level?",
   "What triggers asthma symptoms in this patient?",
   "What lifestyle changes are recommended for blood pressure?",
+];
+
+const FEATURES = [
+  {
+    label: "HIPAA Compliant",
+    color: "chip-teal",
+    paths: (
+      <>
+        <path d="M9 12l2 2 4-4" />
+        <path d="M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9 9 4.03 9 9z" />
+      </>
+    ),
+  },
+  {
+    label: "Streaming AI",
+    color: "chip-emerald",
+    paths: <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />,
+  },
+  {
+    label: "Source-Grounded RAG",
+    color: "chip-cyan",
+    paths: (
+      <>
+        <ellipse cx="12" cy="5" rx="9" ry="3" />
+        <path d="M21 12c0 1.66-4.03 3-9 3s-9-1.34-9-3" />
+        <path d="M3 5v14c0 1.66 4.03 3 9 3s9-1.34 9-3V5" />
+      </>
+    ),
+  },
+  {
+    label: "Zero Data Egress",
+    color: "chip-teal",
+    paths: (
+      <>
+        <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+        <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+      </>
+    ),
+  },
 ];
 
 export default function Home() {
@@ -60,14 +100,11 @@ export default function Home() {
 
   return (
     <div className="page">
-      {/* Header */}
       <header className="header">
         <div className="header-inner">
           <div className="wordmark">
-            <div className="wordmark-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
-              </svg>
+            <div className="wordmark-icon tile" aria-hidden="true">
+              <Icon strokeWidth={1.75}>{SPARK}</Icon>
             </div>
             <div className="wordmark-text">
               <span className="wordmark-title">CareNotes AI</span>
@@ -76,18 +113,16 @@ export default function Home() {
           </div>
 
           <div className="header-pill" aria-label="System status: online">
-            <span className="header-pill-dot" aria-hidden="true" />
+            <span className="header-pill-dot dot" aria-hidden="true" />
             <span className="header-pill-label">RAG · Live</span>
           </div>
         </div>
       </header>
 
-      {/* Main */}
       <main className="main">
         <div className="shell">
-          {/* Hero */}
           <section className="hero" aria-labelledby="hero-heading">
-            <p className="hero-label">Clinical Intelligence</p>
+            <p className="hero-label eyebrow">Clinical Intelligence</p>
             <h1 className="hero-heading" id="hero-heading">
               Ask anything about<br />
               <em>your patient records</em>
@@ -98,39 +133,15 @@ export default function Home() {
             </p>
           </section>
 
-          {/* Feature chips */}
           <div className="features" aria-label="Feature highlights">
-            <div className="feature-chip">
-              <svg className="chip-teal" viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="M9 12l2 2 4-4" />
-                <path d="M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9 9 4.03 9 9z" />
-              </svg>
-              HIPAA Compliant
-            </div>
-            <div className="feature-chip">
-              <svg className="chip-emerald" viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
-              </svg>
-              Streaming AI
-            </div>
-            <div className="feature-chip">
-              <svg className="chip-cyan" viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <ellipse cx="12" cy="5" rx="9" ry="3" />
-                <path d="M21 12c0 1.66-4.03 3-9 3s-9-1.34-9-3" />
-                <path d="M3 5v14c0 1.66 4.03 3 9 3s9-1.34 9-3V5" />
-              </svg>
-              Source-Grounded RAG
-            </div>
-            <div className="feature-chip">
-              <svg className="chip-teal" viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-              </svg>
-              Zero Data Egress
-            </div>
+            {FEATURES.map(({ label, color, paths }) => (
+              <div className="feature-chip" key={label}>
+                <Icon className={color}>{paths}</Icon>
+                {label}
+              </div>
+            ))}
           </div>
 
-          {/* Ask form */}
           <AskForm
             value={question}
             loading={loading}
@@ -138,13 +149,10 @@ export default function Home() {
             onSubmit={ask}
           />
 
-          {/* Loading state */}
           {loading && !answer && (
             <div className="loading-card" role="status" aria-live="polite">
-              <div className="loading-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
-                </svg>
+              <div className="loading-icon tile" aria-hidden="true">
+                <Icon>{SPARK}</Icon>
               </div>
               <div className="loading-text-block">
                 <p>Searching clinical notes&hellip;</p>
@@ -153,14 +161,13 @@ export default function Home() {
             </div>
           )}
 
-          {/* Error state */}
           {error && (
             <div className="error-card" role="alert">
-              <svg viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <Icon>
                 <circle cx="12" cy="12" r="10" />
                 <line x1="12" y1="8" x2="12" y2="12" />
                 <line x1="12" y1="16" x2="12.01" y2="16" />
-              </svg>
+              </Icon>
               <div className="error-card-content">
                 <p>Request failed</p>
                 <span>{error}</span>
@@ -168,15 +175,11 @@ export default function Home() {
             </div>
           )}
 
-          {/* Answer */}
-          {answer && (
-            <AnswerCard answer={answer} streaming={loading} />
-          )}
+          {answer && <AnswerCard answer={answer} streaming={loading} />}
 
-          {/* Example questions */}
           {showExamples && (
             <section className="examples-section" aria-labelledby="examples-label">
-              <p className="section-label" id="examples-label">Try asking</p>
+              <p className="section-label eyebrow" id="examples-label">Try asking</p>
               <div className="examples-grid">
                 {EXAMPLE_QUESTIONS.map((q) => (
                   <button
@@ -185,10 +188,8 @@ export default function Home() {
                     onClick={() => selectExample(q)}
                     aria-label={`Ask: ${q}`}
                   >
-                    <span className="example-btn-arrow" aria-hidden="true">
-                      <svg viewBox="0 0 24 24" fill="none" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M5 12h14M12 5l7 7-7 7" />
-                      </svg>
+                    <span className="example-btn-arrow tile" aria-hidden="true">
+                      <Icon strokeWidth={2.5}>{ARROW}</Icon>
                     </span>
                     <span className="example-btn-text">{q}</span>
                   </button>
@@ -199,7 +200,6 @@ export default function Home() {
         </div>
       </main>
 
-      {/* Footer */}
       <footer className="footer">
         <p>
           <span>CareNotes Copilot</span>
